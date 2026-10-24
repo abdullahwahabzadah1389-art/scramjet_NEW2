@@ -1,21 +1,27 @@
 import { css, createDelegate, type Component } from "dreamland/core";
 import type { Frame } from "@mercuryworkshop/scramjet-controller";
 import FlagEditor from "./components/FlagEditor";
+import AppsView from "./pages/AppsView";
 import BrowserView from "./pages/BrowserView";
 import RequestViewer from "./pages/RequestViewer";
 import PlaygroundView from "./pages/Playground";
 import SettingsView from "./pages/SettingsPage";
-import { Omnibox } from "./pages/BrowserView";
+import { Omnibox, browserState } from "./pages/BrowserView";
 import { requestsState } from "./pages/RequestViewer";
 
 const App: Component<
 	{},
 	{},
 	{
-		activeTab: "browser" | "requests" | "playground" | "settings";
+		activeTab: "browser" | "apps" | "requests" | "playground" | "settings";
 	}
 > = function (cx) {
 	this.activeTab ??= "browser";
+
+	const openApp = (url: string) => {
+		this.activeTab = "browser";
+		browserState.frame?.go(url);
+	};
 	return (
 		<div>
 			<div class="top-bar">
@@ -29,6 +35,16 @@ const App: Component<
 						}}
 					>
 						Browser
+					</button>
+					<button
+						class={use(this.activeTab).map(
+							(tab) => `tab-button ${tab === "apps" ? "active" : ""}`
+						)}
+						on:click={() => {
+							this.activeTab = "apps";
+						}}
+					>
+						Apps
 					</button>
 					<button
 						class={use(this.activeTab).map(
@@ -80,6 +96,14 @@ const App: Component<
 				<BrowserView
 					active={use(this.activeTab).map((tab) => tab === "browser")}
 				/>
+			</div>
+			<div
+				class={use(this.activeTab).map(
+					(tab) =>
+						`tab-panel apps-panel ${tab === "apps" ? "active" : ""}`
+				)}
+			>
+				<AppsView onOpen={openApp} />
 			</div>
 			<div
 				class={use(this.activeTab).map(
@@ -201,6 +225,9 @@ App.style = css`
 	}
 	.tab-panel.active {
 		display: flex;
+	}
+	.apps-panel {
+		flex-direction: column;
 	}
 	.requests-panel {
 		flex-direction: column;
